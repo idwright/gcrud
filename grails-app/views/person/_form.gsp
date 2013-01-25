@@ -15,7 +15,7 @@
 		<g:message code="person.email.label" default="Email" />
 		
 	</label>
-	<g:field type="url" name="email" value="${personInstance?.email}"/>
+	<g:field type="email" name="email" value="${personInstance?.email}"/>
 </div>
 
 <div class="fieldcontain ${hasErrors(bean: personInstance, field: 'description', 'error')} ">
