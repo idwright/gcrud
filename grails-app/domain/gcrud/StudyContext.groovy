@@ -15,6 +15,6 @@ class StudyContext {
 	int numSamples
 
 	String toString() {
-		return name
+		return contextID
 	}	
 }
