@@ -15,6 +15,42 @@ class PersonController {
         [personInstanceList: Person.list(params), personInstanceTotal: Person.count()]
     }
 
+	def problems(Integer max) {
+		params.max = Math.min(max ?: 10, 100)
+		def filter = { it.email == null || it.email.length() == 0 }
+		//Count number of words
+		def words = "(( LENGTH(description) - LENGTH(REPLACE(description, ' ', ''))+1) < 20 OR ( LENGTH(description) - LENGTH(REPLACE(description, ' ', ''))+1) > 150)"
+		def problems1 = Person.findAll("from Person WHERE (email IS NULL OR LENGTH(email) = 0) OR " + words)
+		
+		Person.findAll().each { s ->
+			def found = false
+			//Check if any affiliations
+			s.affiliation.each { b ->
+			   found = true
+			}
+			if (!found) {
+				//Check if they are already in the problem list
+				problems.each { p ->
+					if (${p.id} == ${s.id}) {
+						found = false;
+					}
+				}
+			}
+			//If no affs and not already there then add them in
+			if (!found) problems1 += s
+		  }
+		//def problems2 = Person.executeQuery("select person.id, person.version, person.name, person.email, person.description, person.filename from person left join person_affiliation ON person_affiliation_id = person.id left join affiliation on affiliation_id = affiliation.id where affiliation.name = '' OR affiliation.name is null group by person.id")
+		def problems =  (problems1)
+		println(problems.size())
+		Integer end = 0
+		Integer start = params.int('offset')
+		if ( start + params.max > problems.size())
+			end = problems.size() - 1
+		else
+			end = start + params.max
+		[personProblemList: problems[start..end], personInstanceTotal: problems.size()]
+	}
+	
     def create() {
         [personInstance: new Person(params)]
     }
@@ -23,7 +59,7 @@ class PersonController {
         def personInstance = new Person(params)
         if (!personInstance.save(flush: true)) {
             render(view: "create", model: [personInstance: personInstance])
-            return
+            retu
         }
 		//handle uploaded file
 		def uploadedFile = request.getFile('payload')
