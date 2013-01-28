@@ -18,37 +18,64 @@ class PersonController {
 	def problems(Integer max) {
 		params.max = Math.min(max ?: 10, 100)
 		def filter = { it.email == null || it.email.length() == 0 }
-		//Count number of words
-		def words = "(( LENGTH(description) - LENGTH(REPLACE(description, ' ', ''))+1) < 20 OR ( LENGTH(description) - LENGTH(REPLACE(description, ' ', ''))+1) > 150)"
-		def problems1 = Person.findAll("from Person WHERE (email IS NULL OR LENGTH(email) = 0) OR " + words)
-		
+
+		def problems = new ArrayList<Person>()
 		Person.findAll().each { s ->
-			def found = false
+			def valid = true
+			
+			def words = s.description.findAll(/\b[\w+]+\b/)
+			if (words.size() < 20) {
+				s.tooShort = true
+				valid = false
+			} else {
+			    s.tooShort = false
+			}
+			if (words.size() > 150) {
+				s.tooLong = true
+				valid = false
+			} else {
+				s.tooLong = false;
+			}
+			if (s.email == null || s.email.length() == 0) {
+				s.noEmail = true
+				valid = false
+			} else {
+				s.noEmail = false
+			}
 			//Check if any affiliations
+			def found = false
 			s.affiliation.each { b ->
-			   found = true
+			   if (b.name.length() > 0) {
+				   found = true
+			   }
 			}
 			if (!found) {
-				//Check if they are already in the problem list
-				problems.each { p ->
-					if (${p.id} == ${s.id}) {
-						found = false;
-					}
-				}
+				s.hasAffiliations = false
+				valid = false
+			} else {
+				s.hasAffiliations = true
 			}
-			//If no affs and not already there then add them in
-			if (!found) problems1 += s
+			
+			if (!valid) {
+				problems += s
+			}
 		  }
-		//def problems2 = Person.executeQuery("select person.id, person.version, person.name, person.email, person.description, person.filename from person left join person_affiliation ON person_affiliation_id = person.id left join affiliation on affiliation_id = affiliation.id where affiliation.name = '' OR affiliation.name is null group by person.id")
-		def problems =  (problems1)
-		println(problems.size())
+		
 		Integer end = 0
-		Integer start = params.int('offset')
+		Integer start = params.offset?params.int('offset'):0
 		if ( start + params.max > problems.size())
-			end = problems.size() - 1
+			end = problems.size() > 0 ? problems.size - 1 : 0
 		else
 			end = start + params.max
-		[personProblemList: problems[start..end], personInstanceTotal: problems.size()]
+		
+		
+		def problemList = new ArrayList<Person>()
+		if (end > 0)
+			problemList = problems[start..end]
+		 else
+		 	problemList = problems
+		
+		[personProblemList: problemList, personInstanceTotal: problems.size()]
 	}
 	
     def create() {

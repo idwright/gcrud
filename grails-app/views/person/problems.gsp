@@ -26,6 +26,7 @@
 					
 						<g:sortableColumn property="name" title="${message(code: 'person.name.label', default: 'Name')}" />
 					
+						<th></th>
 						<g:sortableColumn property="email" title="${message(code: 'person.email.label', default: 'Email')}" />
 					
 						<g:sortableColumn property="description" title="${message(code: 'person.description.label', default: 'Description')}" />
@@ -38,6 +39,13 @@
 					
 						<td><g:link action="show" id="${personInstance.id}">${fieldValue(bean: personInstance, field: "name")}</g:link></td>
 					
+						<td>
+						
+						<g:formatBoolean boolean="${personInstance.tooShort}" true="too short" false=" " />
+						<g:formatBoolean boolean="${personInstance.tooLong}" true="too long" false=" " />
+						<g:formatBoolean boolean="${personInstance.noEmail}" true="no email" false=" " />
+						<g:formatBoolean boolean="${personInstance.hasAffiliations}" true=" " false="no affiliations" />
+						</td>
 						<td>${fieldValue(bean: personInstance, field: "email")}</td>
 					
 						<td>${fieldValue(bean: personInstance, field: "description")}</td>
